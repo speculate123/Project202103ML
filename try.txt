@@ -1,7 +1,4 @@
 hello
 wassup
-<<<<<<< Updated upstream
 poopoo
-=======
 hi
->>>>>>> Stashed changes
