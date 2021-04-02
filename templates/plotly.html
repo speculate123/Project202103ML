@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block script %}
+<!-- 
+put your custom script or styling here
+-->
+{% endblock script %}
+
+
+{% block my_content %}
+<style>
+#plotly-timeseries{
+    display: flex;
+    width: 80%;
+}
+</style>
+<div class="container-fluid">
+        <div class="row">
+            <!-- Placeholder for global-time series -->
+            <div id="plotly-timeseries"></div>
+        </div>
+</div>
+<script>
+    //Parse your Json variable here
+    var graphs = {{ context.plot_global_time_series | safe }};
+    var config = {responsive: true};
+    Plotly.setPlotConfig(config);
+    Plotly.plot('plotly-timeseries', graphs, {});
+    //Plotly.newPlot('plotly-timeseries', graphs, {}, config||{});
+</script>
+{% endblock my_content %}

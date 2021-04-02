@@ -1,6 +1,10 @@
 from DB import Database
 import pandas as pd
 from flask import Flask, Markup, render_template
+import plotly
+import plotly.graph_objects as go
+import plotly.express as px
+import json
 
 # Database = Database()
 # connection = Database.connect()
@@ -16,6 +20,7 @@ app = Flask(__name__)
 df = pd.read_csv('./data/AAPL.csv')
 labels = list(df['Date'])
 values = list(df['Close'])
+data = df[['Date', 'Close', 'High', 'Low', 'Open']]
 
 app = Flask(__name__)
 
@@ -24,6 +29,15 @@ def line():
     line_labels=labels
     line_values=values
     return render_template('line_chart.html', title='Bitcoin Monthly Price in USD', max=150, labels=line_labels, values=line_values)
+
+@app.route("/plotly")
+def plot_plotly_global():
+    fig = px.line(data, x='Date', y=['Close', 'High', 'Low', 'Open'], title='Global daily new cases')
+    fig.update_xaxes(rangeslider_visible=True)
+    #fig.update_layout(autosize = true, width=1500, height=500)
+    plottry = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    context = {'plot_global_time_series': plottry}
+    return render_template('plotly.html', context=context)
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080)
