@@ -12,19 +12,197 @@ put your custom script or styling here
     display: flex;
     width: 80%;
 }
+#plotly-try-timeseries{
+    display: flex;
+    width: 80%;
+}
+#chartContainer{
+    display: flex;
+    width: 80%;
+}
 </style>
+<script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.stock.min.js"></script>
+
+
 <div class="container-fluid">
         <div class="row">
             <!-- Placeholder for global-time series -->
             <div id="plotly-timeseries"></div>
         </div>
+        <div class="row">
+            <!-- Placeholder for global-time series -->
+            <div id="plotly-try-timeseries"></div>
+        </div>
+        <div class="row">
+            <div id="chartContainer"></div>
+        </div>
+        <div class="row">
+            <div id="chartContainer2"></div>
+        </div>
 </div>
 <script>
     //Parse your Json variable here
     var graphs = {{ context.plot_global_time_series | safe }};
-    var config = {responsive: true};
+    var config = {responsive: true, 'scrollZoom': true};
     Plotly.setPlotConfig(config);
-    Plotly.plot('plotly-timeseries', graphs, {});
-    //Plotly.newPlot('plotly-timeseries', graphs, {}, config||{});
+    Plotly.newPlot('plotly-timeseries', graphs, {});
+</script>
+<script>
+    //Parse your Json variable here
+    var aapldata = {{ aapldata|tojson }};
+    console.log(aapldata);
+    var trace = {
+        x: aapldata.Date, 
+        close: aapldata.Close,
+        decreasing: {line: {color: '#7F7F7F'}},     
+        high: aapldata.High,
+        increasing: {line: {color: '#17BECF'}},     
+        line: {color: 'rgba(31,119,180,1)'}, 
+        low: aapldata.Low,
+        open: aapldata.Open,
+        type: 'candlestick', 
+        xaxis: 'x', 
+        yaxis: 'y',
+        name: 'aapl'
+    };
+    
+
+    var data = [trace];
+
+    var layout = {
+    dragmode: 'zoom',  
+    showlegend: true, 
+    xaxis: {
+        autorange: true, 
+        // domain: [0, 1], 
+        // range: ['2017-01-03 12:00', '2017-02-15 12:00'], 
+        rangeslider: {visible:false}, 
+        title: 'Date', 
+        type: 'date'
+    }, 
+    yaxis: {
+        autorange: true, 
+        // domain: [0, 1], 
+        // range: [114.609999778, 137.410004222], 
+        type: 'linear',
+        title: 'value'
+    }
+    };
+
+    var config = {responsive: true, 'scrollZoom': true};
+    Plotly.newPlot('plotly-try-timeseries', data, layout, config);
+
+</script>
+
+<script>
+    var xpy = {{ xjson|tojson }};
+    var ypy = {{ yjson|tojson }};
+    var xjson = JSON.parse(xpy);  
+    var yjson = JSON.parse(ypy); 
+    var canvasdata = [];
+    for (var i = 0; i < xjson.length; i++) {
+        canvasdata.push({
+            x:new Date(
+                    parseInt(xjson[i].split("-")[0]),
+                    parseInt(xjson[i].split("-")[1]),
+                    parseInt(xjson[i].split("-")[2])
+                ), 
+            y:yjson[i]
+        }); 
+    } 
+
+    window.onload = function () {
+        var chart = new CanvasJS.StockChart("chartContainer2",{
+            theme: "light2",
+            zoomEnabled: true, 
+            animationEnabled: true,
+            exportEnabled: true,
+            title:{
+                text:"StockChart with Date-Time Axis"
+            },
+            subtitles: [{
+                text: "Bitcoin Price (in USD)"
+            }],
+            charts: [{
+                axisX: {
+                    crosshair: {
+                    enabled: true,
+                    snapToDataPoint: true
+                    }
+                },
+                axisY: {
+                    crosshair: {
+                        enabled: true,
+                        //snapToDataPoint: true
+                    }
+                    //prefix: "$"
+                },
+                data: [{
+                    type: "candlestick",
+                    dataPoints : canvasdata,
+                    risingColor: "green",
+                    fallingColor: "red",
+                }]
+            }],
+            navigator: {
+                data: [{
+                    dataPoints: canvasdata
+                }],
+                slider: {
+                    minimum: new Date(2020, 03, 01),
+                    maximum: new Date(2021, 03, 31)
+                }
+            }
+        });   
+        chart.render();
+    }      
+</script>
+<script>
+window.onload = function () {
+    var dps1 = [], dps2= [];
+    var stockChart = new CanvasJS.StockChart("chartContainer",{
+      theme: "light2",
+      exportEnabled: true,
+      title:{
+        text:"StockChart with Date-Time Axis"
+      },
+      subtitles: [{
+        text: "Bitcoin Price (in USD)"
+      }],
+      charts: [{
+        axisX: {
+          crosshair: {
+            enabled: true,
+            snapToDataPoint: true
+          }
+        },
+        axisY: {
+          prefix: "$"
+        },
+        data: [{
+          type: "candlestick",
+          yValueFormatString: "$#,###.##",
+          dataPoints : canvasdata
+        }]
+      }],
+      navigator: {
+        data: [{
+          dataPoints: dps2
+        }],
+        slider: {
+          minimum: new Date(2018, 04, 01),
+          maximum: new Date(2018, 06, 01)
+        }
+      }
+    });
+    $.getJSON("https://canvasjs.com/data/docs/btcusd2018.json", function(data) {
+      for(var i = 0; i < data.length; i++){
+        dps1.push({x: new Date(data[i].date), y: [Number(data[i].open), Number(data[i].high), Number(data[i].low), Number(data[i].close)]});
+        dps2.push({x: new Date(data[i].date), y: Number(data[i].close)});
+      }
+      stockChart.render();
+    });
+  }       
 </script>
 {% endblock my_content %}
